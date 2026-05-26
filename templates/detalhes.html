@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %} Detalhes - {{ r.ticket_atendimento }}{% endblock %}
+{% block content %}
+<div class="card-sara">
+    <div class="card-header"> {{ r.id_retorno }} | Ticket: {{ r.ticket_atendimento }}</div>
+    <div class="card-body">
+        {% set sections = [
+            (' ETAPA 1 - SOLICITAÇÃO', '#4472C4', ['id_retorno','ticket_atendimento','gp_recebimento_cliente','gp_ce_envio_recebimento','nome_pmo','numero_proposta','nome_cliente','nome_projeto','codigo_documento','tipo_retorno','justificativa_prioridade','status_retorno']),
+            (' ETAPA 2 - AVALIAÇÃO CE', '#ED7D31', ['avaliador_retorno','area_responsavel','ce_ar_envio_recebimento','obs_avaliacao_ce']),
+            (' ETAPA 3 - EXECUÇÃO', '#70AD47', ['responsavel_execucao','status_execucao','ar_ce_envio_recebimento','comentario_execucao']),
+            (' ETAPA 4 - VALIDAÇÃO CE', '#9B59B6', ['aprovador_retorno','status_ce','ce_gp_envio_recebimento','comentario_validacao']),
+            (' ETAPA 5 - ENVIO / BAIXA', '#44546A', ['gp_envio_cliente','obs_envio']),
+            (' EXCLUSÃO', '#808080', ['status_exclusao','responsavel_exclusao','detalhamento_exclusao','data_exclusao']),
+        ] %}
+        {% set labels = {
+            'id_retorno':'ID','ticket_atendimento':'Ticket','gp_recebimento_cliente':'Data Receb. GP','gp_ce_envio_recebimento':'Data Envio GP→CE',
+            'nome_pmo':'PMO','numero_proposta':'Nº Proposta','nome_cliente':'Cliente / Patrocinador','nome_projeto':'Projeto',
+            'codigo_documento':'Código Documento','tipo_retorno':'Tipo / Prioridade','justificativa_prioridade':'Justificativa',
+            'status_retorno':'Status Geral','avaliador_retorno':'Avaliador (CE)','area_responsavel':'Área Responsável',
+            'ce_ar_envio_recebimento':'Data Envio CE→AR','obs_avaliacao_ce':'Pendências / Obs. Avaliação CE',
+            'status_execucao':'Status Execução','responsavel_execucao':'Responsável Execução',
+            'ar_ce_envio_recebimento':'Data Envio AR→CE','comentario_execucao':'Comentário da Execução',
+            'aprovador_retorno':'Aprovador CE','status_ce':'Status CE (Validação)',
+            'ce_gp_envio_recebimento':'Data Envio CE→GP','comentario_validacao':'Comentário da Validação',
+            'gp_envio_cliente':'Data Envio GP→Cliente','obs_envio':'Observações do Envio',
+            'status_exclusao':'Status Exclusão','responsavel_exclusao':'Responsável Exclusão',
+            'detalhamento_exclusao':'Detalhamento Exclusão','data_exclusao':'Data Exclusão',
+            'prazo_execucao_customizado':'Prazo Customizado de Execução',
+        } %}
+
+        {% for sec_title, color, fields in sections %}
+        <div class="mb-3">
+            <div style="background:{{ color }};color:#fff;padding:4px 10px;font-size:13px;font-weight:600;border-radius:4px 4px 0 0;">{{ sec_title }}</div>
+            <div style="border:1px solid #D0D8E8;border-top:none;border-radius:0 0 4px 4px;padding:8px 12px;">
+                {% set has = namespace(val=False) %}
+                {% for fld in fields %}
+                {% set val = r.get(fld, '') %}
+                {% if val and val != '-' %}
+                {% set has.val = True %}
+                <div class="row mb-1">
+                    <div class="col-md-4 text-muted small">{{ labels.get(fld, fld) }}:</div>
+                    <div class="col-md-8"><small>{{ val }}</small></div>
+                </div>
+                {% endif %}
+                {% endfor %}
+                {% if not has.val %}<small class="text-muted">- não preenchido -</small>{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if current_user.pode_excluir and r.status_exclusao != 'Excluído' %}
+        <hr>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('core.relatorio_pdf', ticket=r.ticket_atendimento) }}" class="btn btn-primary btn-sm" target="_blank"> Baixar PDF</a>
+            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#excluirModal"> Excluir (Logico)</button>
+        </div>
+
+        <div class="modal fade" id="excluirModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form method="POST" action="{{ url_for('core.excluir', ticket=r.ticket_atendimento) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="modal-header"><h5 class="modal-title"> Exclusão Lógica de Retorno</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                        <div class="modal-body">
+                            <p><strong>ID: {{ r.id_retorno }}</strong></p>
+                            <div class="alert alert-warning py-2 small"> O registro NÃO será removido do banco de dados. Será marcado como Excluído para preservar a integridade.</div>
+                            <label class="form-label-sm">Detalhamento da exclusão *:</label>
+                            <textarea name="motivo" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-danger"> Confirmar Exclusão</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

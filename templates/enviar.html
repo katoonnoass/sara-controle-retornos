@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Etapa 5 - Envio ao Patrocinador (Projetos){% endblock %}
+{% block content %}
+<div class="card-sara">
+    <div class="card-header">Etapa 5 - Envio ao Patrocinador / Baixa (Projetos)</div>
+    <div class="card-body">
+        <div class="alert alert-info py-2 px-3 small" style="background:var(--primary-subtle);color:var(--primary);border:none;">Confirme o envio ao patrocinador. Selecione a data de envio.</div>
+
+        <form method="GET" class="row g-2 mb-3 align-items-end">
+            <div class="col-auto">
+                <label class="form-label-sm">Ticket:</label>
+                <select name="ticket" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">Selecione...</option>
+                    {% for t in tickets %}<option value="{{ t }}" {{ 'selected' if t == ticket_sel }}>{{ t }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <a href="{{ url_for('etapas.enviar') }}" class="btn btn-sm btn-outline-secondary">↺ Atualizar</a>
+            </div>
+        </form>
+
+        {% if not tickets %}
+        <div class="alert alert-warning py-2 px-3 small" style="background:rgba(251,191,36,.08);color:var(--warning);border:none;">Nenhum ticket aguarda Envio Projetos.</div>
+        {% endif %}
+
+        {% if record %}
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="ticket" value="{{ ticket_sel }}">
+            <div class="row g-2 mb-3">
+                <div class="col-auto"><label class="form-label-sm">Ticket</label><input class="form-control form-control-sm ro-field" value="{{ record.ticket_atendimento }}" readonly></div>
+                <div class="col-auto"><label class="form-label-sm">Nº Proposta</label><input class="form-control form-control-sm ro-field" value="{{ record.numero_proposta }}" readonly></div>
+                <div class="col-auto"><label class="form-label-sm">Cód. Documento</label><input class="form-control form-control-sm ro-field" value="{{ record.codigo_documento }}" readonly></div>
+                <div class="col"><label class="form-label-sm">Projeto</label><input class="form-control form-control-sm ro-field" value="{{ record.nome_projeto }}" readonly></div>
+            </div>
+            <div class="row g-2 mb-3">
+                <div class="col-auto"><label class="form-label-sm">Cliente/Patrocinador</label><input class="form-control form-control-sm ro-field" value="{{ record.nome_cliente }}" readonly></div>
+                <div class="col-auto"><label class="form-label-sm">PMO</label><input class="form-control form-control-sm ro-field" value="{{ record.nome_pmo }}" readonly></div>
+                <div class="col-auto"><label class="form-label-sm">Prioridade</label><input class="form-control form-control-sm ro-field" value="{{ record.tipo_retorno }}" readonly></div>
+            </div>
+
+            <h6 class="text-muted mt-3" style="font-size:13px;">Histórico do Fluxo</h6>
+            <div class="p-3 mb-3" style="background:var(--bg);border-radius:6px;">
+                <strong class="small">E2 - Avaliação CE</strong>
+                <div class="row g-1 mb-2">
+                    <div class="col-auto"><input class="form-control form-control-sm ro-field" value="{{ record.avaliador_retorno }}" readonly style="width:200px;"></div>
+                    <div class="col-auto"><input class="form-control form-control-sm ro-field" value="{{ record.area_responsavel }}" readonly style="width:220px;"></div>
+                </div>
+                <textarea class="form-control form-control-sm ro-field mb-2" rows="1" readonly>{{ record.obs_avaliacao_ce }}</textarea>
+                <hr class="my-2">
+                <strong class="small">E3 - Execução</strong>
+                <div class="row g-1 mb-2">
+                    <div class="col-auto"><input class="form-control form-control-sm ro-field" value="{{ record.responsavel_execucao }}" readonly style="width:200px;"></div>
+                    <div class="col-auto"><input class="form-control form-control-sm ro-field" value="{{ record.status_execucao }}" readonly style="width:160px;"></div>
+                </div>
+                <textarea class="form-control form-control-sm ro-field mb-2" rows="1" readonly>{{ record.comentario_execucao }}</textarea>
+                <hr class="my-2">
+                <strong class="small">E4 - Validação CE</strong>
+                <div class="row g-1">
+                    <div class="col-auto"><input class="form-control form-control-sm ro-field" value="{{ record.aprovador_retorno }}" readonly style="width:200px;"></div>
+                    <div class="col-auto"><input class="form-control form-control-sm ro-field" value="{{ record.status_ce }}" readonly style="width:160px;"></div>
+                </div>
+                <textarea class="form-control form-control-sm ro-field" rows="1" readonly>{{ record.comentario_validacao }}</textarea>
+            </div>
+
+            <hr>
+            <h6 class="text-muted" style="font-size:13px;">Dados do Envio</h6>
+            <div class="row g-2 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label-sm">Responsável pelo Envio *</label>
+                    <select name="responsavel_envio" class="form-select form-select-sm" required>
+                        <option value="">Selecione...</option>
+                        {% for p in pmo_pessoas %}<option value="{{ p }}" {{ 'selected' if p == record.nome_pmo }}>{{ p }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-sm">Data Envio GP→Cliente *</label>
+                    <input type="date" name="gp_envio_cliente" class="form-control form-control-sm" value="{{ datetime.now().strftime('%Y-%m-%d') }}">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label-sm">Observações do Envio</label>
+                <textarea name="obs_envio" class="form-control form-control-sm" rows="2">{{ record.obs_envio if record.obs_envio not in ('-','') else '' }}</textarea>
+            </div>
+            <hr>
+            <div class="d-flex gap-2 justify-content-end">
+                <button type="submit" class="btn btn-sm btn-success">💾 Salvar</button>
+                <a href="{{ url_for('core.lista') }}" class="btn btn-sm btn-outline-secondary">✕ Cancelar</a>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

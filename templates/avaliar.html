@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Etapa 2 - Avaliação e Direcionamento (CE){% endblock %}
+{% block content %}
+<div class="card-sara">
+    <div class="card-header">Etapa 2 - Avaliação e Direcionamento (Coordenação de Estudos)</div>
+    <div class="card-body">
+        <div class="alert alert-warning py-2 px-3 small" style="background:rgba(251,191,36,.08);color:var(--warning);border:none;">Defina a área responsável, o avaliador e registre pendências/observações. A data de envio CE→AR será registrada automaticamente.</div>
+
+        <form method="GET" class="row g-2 mb-3 align-items-end">
+            <div class="col-auto">
+                <label class="form-label-sm">Ticket:</label>
+                <select name="ticket" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">Selecione...</option>
+                    {% for t in tickets %}<option value="{{ t }}" {{ 'selected' if t == ticket_sel }}>{{ t }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <a href="{{ url_for('etapas.avaliar') }}" class="btn btn-sm btn-outline-secondary">↺ Atualizar</a>
+            </div>
+        </form>
+
+        {% if not tickets %}
+        <div class="alert alert-warning py-2 px-3 small" style="background:rgba(251,191,36,.08);color:var(--warning);border:none;">Nenhum ticket aguarda Avaliação CE.</div>
+        {% endif %}
+
+        {% if record %}
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="ticket" value="{{ ticket_sel }}">
+            <div class="row g-2 mb-3">
+                <div class="col-auto"><label class="form-label-sm">Ticket</label><input class="form-control form-control-sm ro-field" value="{{ record.ticket_atendimento }}" readonly></div>
+                <div class="col-auto"><label class="form-label-sm">Nº Proposta</label><input class="form-control form-control-sm ro-field" value="{{ record.numero_proposta }}" readonly></div>
+                <div class="col-auto"><label class="form-label-sm">Cód. Documento</label><input class="form-control form-control-sm ro-field" value="{{ record.codigo_documento }}" readonly></div>
+                <div class="col"><label class="form-label-sm">Projeto</label><input class="form-control form-control-sm ro-field" value="{{ record.nome_projeto }}" readonly></div>
+            </div>
+            <div class="row g-2 mb-3">
+                <div class="col-auto"><label class="form-label-sm">Cliente/Patrocinador</label><input class="form-control form-control-sm ro-field" value="{{ record.nome_cliente }}" readonly></div>
+                <div class="col-auto"><label class="form-label-sm">PMO</label><input class="form-control form-control-sm ro-field" value="{{ record.nome_pmo }}" readonly></div>
+                <div class="col-auto"><label class="form-label-sm">Prioridade</label><input class="form-control form-control-sm ro-field" value="{{ record.tipo_retorno }}" readonly></div>
+            </div>
+            <hr>
+            <div class="row g-2 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label-sm">Área Responsável *</label>
+                    <select name="area_responsavel" class="form-select form-select-sm" required>
+                        <option value="">Selecione...</option>
+                        {% for s in setores %}<option value="{{ s }}" {{ 'selected' if s == record.area_responsavel }}>{{ s }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label-sm">Avaliador *</label>
+                    <select name="avaliador_retorno" class="form-select form-select-sm" required>
+                        <option value="">Selecione...</option>
+                        {% for p in pessoas_ce %}<option value="{{ p }}" {{ 'selected' if p == record.avaliador_retorno }}>{{ p }}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label-sm">Pendências / Observações da Avaliação</label>
+                <textarea name="obs_avaliacao_ce" class="form-control form-control-sm" rows="3">{{ record.obs_avaliacao_ce if record.obs_avaliacao_ce not in ('-','') else '' }}</textarea>
+            </div>
+            <hr>
+            <div class="d-flex gap-2 justify-content-end">
+                <button type="submit" class="btn btn-sm btn-success">💾 Salvar</button>
+                <a href="{{ url_for('core.lista') }}" class="btn btn-sm btn-outline-secondary">✕ Cancelar</a>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

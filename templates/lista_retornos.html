@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %} Lista de Retornos{% endblock %}
+{% block content %}
+<div class="card-sara">
+    <div class="card-header">Filtros</div>
+    <div class="card-body py-2 px-3">
+        <form method="GET" class="row g-1 align-items-end">
+            <div class="col-auto">
+                <label class="form-label-sm">Buscar:</label>
+                <input type="text" name="search" class="form-control form-control-sm" value="{{ search }}" placeholder="Buscar..." style="min-width:160px;">
+            </div>
+            <div class="col-auto">
+                <label class="form-label-sm">Status:</label>
+                <select name="status" class="form-select form-select-sm" style="min-width:170px;">
+                    <option value="">Todos</option>
+                    {% for s in status_fluxo %}<option value="{{ s }}" {{ 'selected' if status_filter == s }}>{{ s }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label-sm">Tipo:</label>
+                <select name="tipo" class="form-select form-select-sm" style="min-width:120px;">
+                    <option value="">Todos</option>
+                    <option value="Prioritário" {{ 'selected' if tipo_filter == 'Prioritário' }}>Prioritário</option>
+                    <option value="Normal" {{ 'selected' if tipo_filter == 'Normal' }}>Normal</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label-sm">Área:</label>
+                <select name="area" class="form-select form-select-sm" style="min-width:160px;">
+                    <option value="">Todos</option>
+                    {% for a in areas %}<option value="{{ a }}" {{ 'selected' if area_filter == a }}>{{ a }}</option>{% endfor %}
+                </select>
+            </div>
+            {% if pode_excluir %}
+            <div class="col-auto d-flex align-items-end pb-1">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="excluidos" value="1" id="showExcluidos" {{ 'checked' if incluir }}>
+                    <label class="form-check-label small" for="showExcluidos">Mostrar excluídos</label>
+                </div>
+            </div>
+            {% endif %}
+            <div class="col-auto d-flex align-items-end pb-1">
+                <button type="submit" class="btn btn-sm btn-outline-secondary">Filtrar</button>
+                <a href="{{ url_for('core.exportar') }}" class="btn btn-sm btn-outline-primary ms-1">Excel</a>
+            </div>
+        </form>
+        <small class="text-muted mt-1 d-block">{{ total }} registro(s) encontrado(s) &mdash; página {{ page }} de {{ total_pages }}</small>
+    </div>
+</div>
+
+<div class="card-sara">
+    <div class="card-header">Retornos</div>
+    <div class="table-responsive-x">
+        <table class="table table-sara table-hover mb-0">
+            <thead><tr><th>Ticket</th><th>Data Receb.</th><th>Projeto</th><th>Cód. Documento</th><th>PMO</th><th>Cliente</th><th>Tipo</th><th>Área</th><th>Status</th><th>Último Comentário</th></tr></thead>
+            <tbody>
+                {% for r in retornos %}
+                {% set excluido = r.status_exclusao == 'Excluído' %}
+                <tr class="{{ 'text-muted' if excluido }}" style="{{ 'color:#aaa!important;' if excluido }}">
+                    <td><a href="{{ url_for('core.detalhes', ticket=r.ticket_atendimento) }}" class="text-decoration-none {{ 'text-muted' if excluido }}">{{ r.ticket_atendimento }}</a></td>
+                    <td><small>{{ (r.gp_recebimento_cliente or '')[:10] }}</small></td>
+                    <td><small>{{ (r.nome_projeto or '')[:30] }}</small></td>
+                    <td><small>{{ (r.codigo_documento or '')[:15] }}</small></td>
+                    <td><small>{{ (r.nome_pmo or '')[:15] }}</small></td>
+                    <td><small>{{ (r.nome_cliente or '')[:15] }}</small></td>
+                    <td><small>{{ r.tipo_retorno }}</small></td>
+                    <td><small>{{ (r.area_responsavel or '')[:20] }}</small></td>
+                    <td>
+                        {% set status = r.status_retorno %}
+                        {% if status == 'Aguardando Avaliação CE' %}<span class="badge-status s-avaliacao">{{ status }}</span>
+                        {% elif status == 'Aguardando Execução' %}<span class="badge-status s-execucao">{{ status }}</span>
+                        {% elif status == 'Aguardando Validação CE' %}<span class="badge-status s-validacao">{{ status }}</span>
+                        {% elif status == 'Aguardando Envio Projetos' %}<span class="badge-status s-envio">{{ status }}</span>
+                        {% elif status == 'Concluído' %}<span class="badge-status s-concluido">{{ status }}</span>
+                        {% else %}<small>{{ status }}</small>{% endif %}
+                    </td>
+                    <td><small>{{ r.comentario_validacao or r.comentario_execucao or r.obs_avaliacao_ce or r.obs_envio or '' }}</small></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="10" class="text-center text-muted py-4">Nenhum retorno encontrado.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if total_pages > 1 %}
+        <div class="d-flex justify-content-between align-items-center px-3 py-2 border-top" style="border-color:var(--border)!important;">
+            <small class="text-muted">Página {{ page }} de {{ total_pages }}</small>
+            <nav>
+                <ul class="pagination pagination-sm mb-0" style="gap:2px;">
+                    <li class="page-item {{ 'disabled' if page <= 1 }}">
+                        <a class="page-link" href="{{ url_for('core.lista', page=1, status=status_filter, tipo=tipo_filter, area=area_filter, search=search, excluidos='1' if incluir else '', prazo=prazo_filter) }}" style="background:var(--bg-card);border-color:var(--border);color:var(--text);">&laquo;</a>
+                    </li>
+                    <li class="page-item {{ 'disabled' if page <= 1 }}">
+                        <a class="page-link" href="{{ url_for('core.lista', page=page-1, status=status_filter, tipo=tipo_filter, area=area_filter, search=search, excluidos='1' if incluir else '', prazo=prazo_filter) }}" style="background:var(--bg-card);border-color:var(--border);color:var(--text);">&lsaquo;</a>
+                    </li>
+                    {% for p in range([1, page-2]|max, [total_pages, page+2]|min + 1) %}
+                    <li class="page-item {{ 'active' if p == page }}">
+                        <a class="page-link" href="{{ url_for('core.lista', page=p, status=status_filter, tipo=tipo_filter, area=area_filter, search=search, excluidos='1' if incluir else '', prazo=prazo_filter) }}" style="{{ 'background:var(--primary);border-color:var(--primary);color:#fff;' if p == page else 'background:var(--bg-card);border-color:var(--border);color:var(--text);' }}">{{ p }}</a>
+                    </li>
+                    {% endfor %}
+                    <li class="page-item {{ 'disabled' if page >= total_pages }}">
+                        <a class="page-link" href="{{ url_for('core.lista', page=page+1, status=status_filter, tipo=tipo_filter, area=area_filter, search=search, excluidos='1' if incluir else '', prazo=prazo_filter) }}" style="background:var(--bg-card);border-color:var(--border);color:var(--text);">&rsaquo;</a>
+                    </li>
+                    <li class="page-item {{ 'disabled' if page >= total_pages }}">
+                        <a class="page-link" href="{{ url_for('core.lista', page=total_pages, status=status_filter, tipo=tipo_filter, area=area_filter, search=search, excluidos='1' if incluir else '', prazo=prazo_filter) }}" style="background:var(--bg-card);border-color:var(--border);color:var(--text);">&raquo;</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

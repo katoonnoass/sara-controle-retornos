@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Etapa 1 - Solicitar Retorno (PMO){% endblock %}
+{% block content %}
+<div class="card-sara">
+    <div class="card-header">Etapa 1 - Solicitação de Retorno (PMO)</div>
+    <div class="card-body">
+        <div class="alert alert-info py-2 px-3 small" style="background:var(--primary-subtle);color:var(--primary);border:none;">O ID será gerado automaticamente. Você pode adicionar múltiplos Códigos de Documento para a mesma proposta.</div>
+        <form method="POST" id="formSolicitar">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="row g-2 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label-sm">Nº Proposta</label>
+                    <input type="text" name="numero_proposta" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label-sm">Projeto</label>
+                    <input type="text" name="nome_projeto" class="form-control form-control-sm">
+                </div>
+            </div>
+            <div class="row g-2 mb-3">
+                <div class="col-md-3">
+                    <label class="form-label-sm">Data Receb. GP *</label>
+                    <input type="date" name="gp_recebimento_cliente" class="form-control form-control-sm" value="{{ datetime.now().strftime('%Y-%m-%d') }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-sm">PMO *</label>
+                    <select name="nome_pmo" class="form-select form-select-sm" required>
+                        <option value="">Selecione...</option>
+                        {% for p in pmos %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6" style="position:relative;">
+                    <label class="form-label-sm">Cliente / Patrocinador</label>
+                    <input type="text" name="nome_cliente" class="form-control form-control-sm" id="inputCliente" placeholder="Digite para buscar..." autocomplete="off" oninput="buscarCliente(this)">
+                    <div id="sugestoesCliente" style="display:none;position:absolute;z-index:999;top:100%;left:0;right:0;background:var(--dropdown-bg);border:1px solid var(--border);border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.3);"></div>
+                </div>
+            </div>
+
+            <hr class="my-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <strong style="font-size:14px;">📄 Códigos de Documento</strong>
+                <button type="button" class="btn btn-sm btn-primary" onclick="addCodigo()">+ Adicionar Código</button>
+            </div>
+            <small class="text-muted d-block mb-2">Adicione pelo menos 1 código. Cada código gerará um registro separado.</small>
+            <div id="codigosContainer" class="p-3 mb-3" style="background:var(--bg);border-radius:6px;">
+                <div id="codigoPlaceholder" class="text-muted small">Nenhum código adicionado.</div>
+            </div>
+
+            <hr class="my-3">
+            <div class="row g-2 mb-3">
+                <div class="col-auto">
+                    <label class="form-label-sm">Retorno prioritário?</label>
+                    <div class="d-flex gap-3 mt-1">
+                        <div class="form-check"><input class="form-check-input" type="radio" name="tipo_retorno" value="Sim" id="prioSim" onchange="toggleJustif()"><label class="form-check-label small" for="prioSim">Sim</label></div>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="tipo_retorno" value="Não" id="prioNao" checked onchange="toggleJustif()"><label class="form-check-label small" for="prioNao">Não</label></div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label-sm">Justificativa Prioridade</label>
+                    <select name="justificativa_prioridade" class="form-select form-select-sm" id="justifSelect" disabled>
+                        <option value="">Selecione...</option>
+                        {% for j in ['Urgência técnica','Solicitação da diretoria','Impacto regulatório','Prazo contratual','Outro'] %}
+                        <option value="{{ j }}">{{ j }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <hr class="my-3">
+            <div class="d-flex gap-2 justify-content-end">
+                <button type="submit" class="btn btn-sm btn-success">💾 Salvar</button>
+                <a href="{{ url_for('core.dashboard') }}" class="btn btn-sm btn-outline-secondary">✕ Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let codigoCount = 0;
+function addCodigo() {
+    document.getElementById('codigoPlaceholder')?.remove();
+    const container = document.getElementById('codigosContainer');
+    const div = document.createElement('div');
+    div.className = 'input-group input-group-sm mb-2';
+    div.style.maxWidth = '500px';
+    div.innerHTML = `
+        <span class="input-group-text">C?digo ${++codigoCount}:</span>
+        <input type="text" name="codigo_documento[]" class="form-control" placeholder="C?digo do documento" required>
+        <button type="button" class="btn btn-outline-danger" onclick="this.closest('.input-group').remove()"></button>
+    `;
+    container.appendChild(div);
+}
+function toggleJustif() {
+    document.getElementById('justifSelect').disabled = !document.getElementById('prioSim').checked;
+}
+
+// Autocomplete cliente/patrocinador
+const patrocinadores = [];
+fetch('{{ url_for("core.api_patrocinadores") }}').then(r => r.json()).then(d => { patrocinadores.push(...d); });
+function buscarCliente(input) {
+    const val = input.value.trim().toLowerCase();
+    const div = document.getElementById('sugestoesCliente');
+    if (!val || !patrocinadores.length) { div.style.display = 'none'; return; }
+    const filtrados = patrocinadores.filter(p => p.toLowerCase().includes(val));
+    if (!filtrados.length) { div.style.display = 'none'; return; }
+    div.innerHTML = filtrados.map(p => `<div style="padding:6px 12px;cursor:pointer;color:var(--dropdown-text);font-size:13px;" onmouseover="this.style.background='var(--dropdown-hover)'" onmouseout="this.style.background='transparent'" onclick="selecionarCliente('${p.replace(/'/g, "\\'")}')">${p}</div>`).join('');
+    div.style.display = 'block';
+}
+function selecionarCliente(nome) {
+    document.getElementById('inputCliente').value = nome;
+    document.getElementById('sugestoesCliente').style.display = 'none';
+}
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#inputCliente')) document.getElementById('sugestoesCliente').style.display = 'none';
+});
+</script>
+{% endblock %}

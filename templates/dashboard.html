@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+{% set h = datetime.now().hour %}
+{% set gr = "Bom dia" if h < 12 else ("Boa tarde" if h < 18 else "Boa noite") %}
+{% set now = datetime.now() %}
+
+<!-- Greeting -->
+<div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+    <div>
+        <h4 style="color:var(--text);margin:0;">{{ gr }}, {{ current_user.nome_exibicao.split()[0] }}!</h4>
+        <small class="text-muted">Acompanhamento de prazos &mdash; {{ now.strftime('%d/%m/%Y') }}</small>
+    </div>
+</div>
+
+<!-- Filter Bar (now also controls KPI click-to-filter) -->
+<div class="card-sara mb-3">
+    <div class="card-body py-2 px-3">
+        <div class="row g-1 align-items-center">
+            <div class="col-auto"><small class="text-muted fw-semibold">Filtros</small></div>
+            <div class="col-auto">
+                <select class="form-select form-select-sm" id="filterPrazo" style="min-width:130px;">
+                    <option value="Todos">Prazo: Todos</option>
+                    {% for p in PRAZO_ORDEM %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <select class="form-select form-select-sm" id="filterTipo" style="min-width:120px;">
+                    <option value="Todos">Tipo: Todos</option>
+                    <option value="Prioritário">Prioritário</option>
+                    <option value="Normal">Normal</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <select class="form-select form-select-sm" id="filterStatus" style="min-width:180px;">
+                    <option value="Todos">Status: Todos</option>
+                    {% for s in STATUS_FLUXO %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-sm btn-outline-secondary" onclick="resetFiltros()" title="Limpar filtros"><i class="bi bi-x-circle"></i></button>
+            </div>
+            <div class="col-auto ms-auto">
+                <small class="text-muted" id="resultCount"></small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- KPIs / MetricCards -->
+<div class="row g-2 mb-3" id="kpiRow">
+    {% set kpi_items = [
+        ('andamento',            '🔄', 'Em Andamento',            '#1565C0'),
+        ('prioritarios',         '🔥', 'Prioritários',            '#C00000'),
+        ('aguardando_avaliacao', '📋', 'Aguard. Avaliação',       '#4472C4'),
+        ('aguardando_execucao',  '🔍', 'Aguard. Execução',        '#ED7D31'),
+        ('aguardando_validacao', '⚙️', 'Aguard. Validação',        '#9B59B6'),
+        ('aguardando_envio',     '📤', 'Aguard. Envio',            '#FFC000'),
+        ('concluidos',           '✅', 'Concluídos',               '#70AD47'),
+        ('atrasados',            '🔴', 'Em Atraso',                '#C00000'),
+    ] %}
+    {% for key, icon, label, color in kpi_items %}
+    <div class="col-6 col-md-4 col-lg-3 col-xl">
+        <div class="metric-card h-100" onclick="filtrar('{{ key }}')">
+            <div class="mc-bar" style="background:{{ color }};"></div>
+            <div class="mc-body">
+                <div class="mc-value" style="color:{{ color }};" id="kpi_{{ key }}">{{ kpis.get(key, 0) }}</div>
+                <div class="mc-label">{{ icon }} {{ label }}</div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Middle row: Status de Prazo (progress bar) + Ranking Top 10 -->
+{% set total_prazo = pizza_data.values()|sum %}
+{% set em_atraso = pizza_data.get("Em Atraso", 0) %}
+{% set pct_atraso = (em_atraso / total_prazo * 100)|round if total_prazo > 0 else 0 %}
+{% set dentro_prazo = total_prazo - em_atraso %}
+<div class="row g-2 mb-3">
+    <div class="col-lg-4 d-flex">
+        <div class="card-sara w-100 d-flex flex-column">
+            <div class="card-header">⏱️ Status de Prazo</div>
+            <div class="card-body flex-grow-1 d-flex flex-column justify-content-center py-3">
+                {% if total_prazo > 0 %}
+                <div class="text-center mb-3">
+                    <div class="text-muted small text-uppercase fw-semibold" style="letter-spacing:.5px;font-size:10px;">Chamados em aberto</div>
+                    <div style="font-weight:800;font-size:42px;color:var(--text);line-height:1;margin:4px 0 6px;">{{ total_prazo }}</div>
+                    <div class="d-flex align-items-center justify-content-center gap-3" style="font-size:12px;">
+                        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#f87171;margin-right:4px;"></span>{{ em_atraso }} atrasado{{ 's' if em_atraso != 1 }}</span>
+                        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#4ade80;margin-right:4px;"></span>{{ dentro_prazo }} no prazo</span>
+                    </div>
+                </div>
+                <div style="margin:0 8px;">
+                    <div style="display:flex;height:18px;border-radius:9px;overflow:hidden;background:rgba(156,163,175,.15);">
+                        {% set pct_dentro = (dentro_prazo / total_prazo * 100)|round if total_prazo > 0 else 0 %}
+                        {% if pct_dentro > 0 %}<div style="width:{{ pct_dentro }}%;background:#4ade80;transition:width .4s;"></div>{% endif %}
+                        {% if pct_atraso > 0 %}<div style="width:{{ pct_atraso }}%;background:#f87171;transition:width .4s;"></div>{% endif %}
+                    </div>
+                    <div class="d-flex justify-content-between mt-1" style="font-size:10px;color:var(--text-muted);">
+                        <span>{{ pct_dentro }}% no prazo</span>
+                        <span>{{ pct_atraso }}% em atraso</span>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-3" style="font-size:13px;">Nenhum chamado em aberto.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8 d-flex">
+        <div class="card-sara w-100 d-flex flex-column">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>🏆 Ranking &mdash; Maior Tempo em Aberto</span>
+                <a href="{{ url_for('core.lista') }}" class="btn btn-sm btn-outline-secondary">Ver todos</a>
+            </div>
+            <div class="table-responsive-x flex-grow-1">
+                <table class="table table-sara table-hover mb-0" style="font-size:12px;">
+                    <thead><tr><th style="width:36px;">#</th><th>Proposta</th><th>Projeto</th><th>Cliente</th><th style="width:80px;">Dias</th></tr></thead>
+                    <tbody>
+                        {% for r in ranking[:10] %}
+                        {% set top_class = 'top1' if r.pos == 1 else ('top2' if r.pos == 2 else ('top3' if r.pos == 3 else '')) %}
+                        <tr class="{{ top_class }}" style="cursor:pointer;" onclick="window.location.href='{{ url_for('core.detalhes', ticket=r.ticket) }}'">
+                            <td style="{% if r.pos == 1 %}color:#f87171;font-weight:700;{% elif r.pos == 2 %}color:#fb923c;font-weight:600;{% elif r.pos == 3 %}color:#fbbf24;font-weight:600;{% else %}color:var(--text-muted);{% endif %}">{{ r.pos }}</td>
+                            <td><small>{{ r.proposta[:12] }}</small></td>
+                            <td><small>{{ r.projeto[:22] }}</small></td>
+                            <td><small>{{ r.cliente[:18] }}</small></td>
+                            <td>
+                                {% if r.dias >= 30 %}
+                                <span class="badge-status" style="background:rgba(248,113,113,.15);color:#f87171;font-weight:600;">+{{ r.dias }}d</span>
+                                {% elif r.dias >= 15 %}
+                                <span class="badge-status" style="background:rgba(251,146,60,.15);color:#fb923c;font-weight:600;">+{{ r.dias }}d</span>
+                                {% elif r.dias >= 7 %}
+                                <span class="badge-status" style="background:rgba(251,191,36,.15);color:#fbbf24;font-weight:600;">+{{ r.dias }}d</span>
+                                {% elif r.dias > 0 %}
+                                <span class="badge-status" style="background:rgba(156,163,175,.12);color:#9ca3af;">+{{ r.dias }}d</span>
+                                {% else %}
+                                <span class="badge-status" style="background:rgba(156,163,175,.12);color:#9ca3af;">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="text-center text-muted py-3">Nenhum chamado em atraso encontrado.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts row -->
+<div class="row g-2 mb-3">
+    <div class="col-md-6 d-flex">
+        <div class="card-sara w-100 d-flex flex-column">
+            <div class="card-header">📊 Retornos por Setor</div>
+            <div class="card-body flex-grow-1 d-flex" style="min-height:220px;"><div class="chart-container align-self-center"><canvas id="setorChart"></canvas></div></div>
+        </div>
+    </div>
+    <div class="col-md-6 d-flex">
+        <div class="card-sara w-100 d-flex flex-column">
+            <div class="card-header">⏰ Lead Time Médio (dias)</div>
+            <div class="card-body flex-grow-1 d-flex" style="min-height:220px;"><div class="chart-container align-self-center"><canvas id="leadChart"></canvas></div></div>
+        </div>
+    </div>
+</div>
+
+<!-- Retornos Table (limited to 20 critical items) -->
+<div class="card-sara">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>⚠️ Retornos Críticos em Aberto</span>
+        <a href="{{ url_for('core.lista') }}" class="btn btn-sm btn-outline-secondary">Ver todos na Lista</a>
+    </div>
+    <div class="card-body py-2 px-3">
+        <small class="text-muted">Exibindo os {{ retornos_dashboard|length }} retornos mais críticos em aberto. Para consultar todos, acesse a Lista de Retornos.</small>
+    </div>
+    <div class="table-responsive-x">
+        <table class="table table-sara table-hover mb-0" id="retornosTable">
+            <thead><tr><th onclick="ordenar(0)" style="cursor:pointer;">Ticket</th><th onclick="ordenar(1)" style="cursor:pointer;">Projeto</th><th onclick="ordenar(2)" style="cursor:pointer;">Cód. Doc.</th><th onclick="ordenar(3)" style="cursor:pointer;">PMO</th><th onclick="ordenar(4)" style="cursor:pointer;">Cliente</th><th>Entrada</th><th>Dias</th><th>Status Prazo</th><th>Status Fluxo</th></tr></thead>
+            <tbody>
+                {% for r in retornos_dashboard %}
+                {% set prazo = r.get('_prazo', '') %}
+                {% set dias = r.get('_dias', 0) %}
+                <tr class="retorno-row" data-prazo="{{ prazo }}" data-tipo="{{ r.tipo_retorno }}" data-status="{{ r.status_retorno }}" onclick="window.location.href='{{ url_for('core.detalhes', ticket=r.ticket_atendimento) }}'" style="cursor:pointer;">
+                    <td><a href="{{ url_for('core.detalhes', ticket=r.ticket_atendimento) }}" class="text-decoration-none">{{ r.ticket_atendimento }}</a></td>
+                    <td><small>{{ r.nome_projeto[:35] }}</small></td>
+                    <td><small>{{ r.codigo_documento[:18] }}</small></td>
+                    <td><small>{{ r.nome_pmo[:18] }}</small></td>
+                    <td><small>{{ r.nome_cliente[:20] }}</small></td>
+                    <td><small>{{ (r.gp_recebimento_cliente or r.gp_ce_envio_recebimento or '-')[:10] }}</small></td>
+                    <td>{% if dias > 0 %}<span class="badge-status" style="background:rgba(248,113,113,.12);color:#f87171;">+{{ dias }}d</span>{% elif dias < 0 %}{{ dias }}d{% else %}<span class="badge-status" style="background:#374151;color:#9ca3af;">0d</span>{% endif %}</td>
+                    <td><span class="badge-status" style="background:{{ PRAZO_CORES.get(prazo, '#6b7280') }}18;color:{{ PRAZO_CORES.get(prazo, '#6b7280') }};">{{ prazo }}</span></td>
+                    <td><small>{{ r.status_retorno }}</small></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="9" class="text-center text-muted py-4">Nenhum retorno crítico em aberto.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const DADOS = {
+    setor: {{ setor_data|tojson }},
+    cores: {{ PRAZO_CORES|tojson }}
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof Chart === 'undefined') {
+        return;
+    }
+
+    // Setor chart
+    const setorCtx = document.getElementById('setorChart').getContext('2d');
+    const sLabels = Object.keys(DADOS.setor);
+    const sValues = Object.values(DADOS.setor);
+    if (sLabels.length > 0) {
+        new Chart(setorCtx, {
+            type: 'bar',
+            data: { labels: sLabels, datasets: [{ data: sValues, backgroundColor: '#5b8def', borderColor: corBorda(), borderWidth: 1.5, borderRadius: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, color: corTextoApoio() }, grid: { color: corBorda() } }, x: { ticks: { color: corTextoApoio(), maxRotation: 20 }, grid: { display: false } } } }
+        });
+    } else {
+        setorCtx.fillStyle = '#8892a8';
+        setorCtx.font = '14px Segoe UI';
+        setorCtx.textAlign = 'center';
+        setorCtx.fillText('Sem dados', 200, 120);
+    }
+
+    // Lead time chart
+    fetch('{{ url_for("core.api_graficos") }}?mes=Todos&ano=Todos')
+        .then(r => r.json())
+        .then(data => {
+            const labels = data.lead_labels || [];
+            const values = data.lead || [];
+            if (labels.length > 0) {
+                new Chart(document.getElementById('leadChart'), {
+                    type: 'bar',
+                    data: { labels, datasets: [{ label: 'Dias', data: values, backgroundColor: '#f59e6c', borderColor: corBorda(), borderWidth: 1.5, borderRadius: 4 }] },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.y + ' dias' } } },
+                        scales: { y: { beginAtZero: true, ticks: { color: corTextoApoio() }, grid: { color: corBorda() } }, x: { ticks: { color: corTextoApoio() }, grid: { display: false } } }
+                    }
+                });
+            } else {
+                const ctx = document.getElementById('leadChart').getContext('2d');
+                ctx.fillStyle = '#8892a8';
+                ctx.font = '14px Segoe UI';
+                ctx.textAlign = 'center';
+                ctx.fillText('Sem dados', 200, 120);
+            }
+        });
+});
+
+// Filtros
+function filtrar(key) {
+    const stMap = { aguardando_avaliacao: 'Aguardando Avalia\u00e7\u00e3o CE', aguardando_execucao: 'Aguardando Execu\u00e7\u00e3o', aguardando_validacao: 'Aguardando Valida\u00e7\u00e3o CE', aguardando_envio: 'Aguardando Envio Projetos', concluidos: 'Conclu\u00eddo' };
+    if (stMap[key]) document.getElementById('filterStatus').value = stMap[key];
+    if (key === 'prioritarios') document.getElementById('filterTipo').value = 'Priorit\u00e1rio';
+    if (key === 'atrasados') document.getElementById('filterPrazo').value = 'Em Atraso';
+    filtrarTabela();
+}
+
+function filtrarTabela() {
+    const p = document.getElementById('filterPrazo').value;
+    const t = document.getElementById('filterTipo').value;
+    const s = document.getElementById('filterStatus').value;
+    let count = 0;
+    document.querySelectorAll('.retorno-row').forEach(row => {
+        const ok = (p === 'Todos' || row.dataset.prazo === p)
+                && (t === 'Todos' || row.dataset.tipo === t)
+                && (s === 'Todos' || row.dataset.status === s);
+        row.style.display = ok ? '' : '';
+        if (ok) count++;
+    });
+    document.getElementById('resultCount').textContent = count + ' de {{ retornos_dashboard|length }}';
+}
+
+function resetFiltros() {
+    document.getElementById('filterPrazo').value = 'Todos';
+    document.getElementById('filterTipo').value = 'Todos';
+    document.getElementById('filterStatus').value = 'Todos';
+    filtrarTabela();
+}
+
+let sortDir = {};
+function ordenar(col) {
+    const tbody = document.querySelector('#retornosTable tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    sortDir[col] = !(sortDir[col] || false);
+    const d = sortDir[col] ? 1 : -1;
+    rows.sort((a, b) => {
+        const va = (a.children[col]?.textContent || '').trim();
+        const vb = (b.children[col]?.textContent || '').trim();
+        const na = parseFloat(va.replace(/[^\d.-]/g, ''));
+        const nb = parseFloat(vb.replace(/[^\d.-]/g, ''));
+        return (!isNaN(na) && !isNaN(nb) ? (na - nb) : va.localeCompare(vb)) * d;
+    });
+    rows.forEach(r => tbody.appendChild(r));
+}
+
+document.getElementById('filterPrazo').addEventListener('change', filtrarTabela);
+document.getElementById('filterTipo').addEventListener('change', filtrarTabela);
+document.getElementById('filterStatus').addEventListener('change', filtrarTabela);
+filtrarTabela();
+</script>
+{% endblock %}

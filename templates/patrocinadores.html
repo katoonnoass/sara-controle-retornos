@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Patrocinadores / Clientes{% endblock %}
+{% block content %}
+<div class="alert alert-info py-2 px-3 small" style="background:var(--primary-subtle);color:var(--primary);border:none;">Patrocinadores/Clientes cadastrados aqui aparecem nos formulários de Solicitação. Defina 'Ativo = Não' para ocultar sem apagar o histórico.</div>
+
+<div class="card-sara">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Patrocinadores / Clientes</span>
+        <a href="{{ url_for('admin.patrocinador_novo') }}" class="btn btn-sm btn-primary">+ Novo</a>
+    </div>
+    <div class="table-responsive-x">
+        <table class="table table-sara table-hover mb-0">
+            <thead><tr><th>ID</th><th>Nome Patrocinador</th><th>Empresa</th><th>Ativo</th><th>Observações</th><th>Ações</th></tr></thead>
+            <tbody>
+                {% for p in pats %}
+                <tr class="{{ 'text-muted' if p.ativo.lower() != 'sim' }}">
+                    <td><small>{{ p.id_patrocinador }}</small></td>
+                    <td>{{ p.nome_patrocinador }}</td>
+                    <td><small>{{ p.empresa }}</small></td>
+                    <td><span class="badge-status" style="background:{% if p.ativo.lower() == 'sim' %}rgba(74,222,128,.12);color:#4ade80;{% else %}rgba(156,163,175,.12);color:#9ca3af;{% endif %}">{{ p.ativo }}</span></td>
+                    <td><small>{{ p.observacoes }}</small></td>
+                    <td style="white-space:nowrap;">
+                        <div class="d-flex gap-1">
+                        <a href="{{ url_for('admin.patrocinador_editar', pid=p.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                        <form method="POST" action="{{ url_for('admin.patrocinador_excluir', pid=p.id) }}" class="d-inline" onsubmit="return confirm('Excluir {{ p.nome_patrocinador }}?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                        </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

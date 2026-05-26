@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}Gráficos e Acompanhamento{% endblock %}
+{% block content %}
+<div class="card-sara">
+    <div class="card-header">Filtros</div>
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-auto">
+                <label class="form-label-sm">Mês:</label>
+                <select id="filterMes" class="form-select form-select-sm">
+                    <option value="Todos">Todos</option>
+                    {% for m in ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'] %}
+                    <option value="{{ m }}">{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label-sm">Ano:</label>
+                <select id="filterAno" class="form-select form-select-sm">
+                    <option value="Todos">Todos</option>
+                    {% for y in range(2023, datetime.now().year + 2) %}
+                    <option value="{{ y }}" {{ 'selected' if y == datetime.now().year }}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label-sm">Setor:</label>
+                <select id="filterSetor" class="form-select form-select-sm">
+                    <option value="Todos">Todos</option>
+                    {% for s in setores %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary btn-sm" onclick="loadData()">Atualizar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-2 mb-3" id="counterRow">
+    <div class="col"><div class="kpi-card"><div class="kpi-bar" style="background:var(--text-muted);"></div><div><div id="kpiTotal" class="kpi-value" style="color:var(--text);">0</div><div class="kpi-label">Total Cadastrados</div></div></div></div>
+    <div class="col"><div class="kpi-card"><div class="kpi-bar" style="background:var(--accent);"></div><div><div id="kpiAvaliados" class="kpi-value" style="color:var(--accent);">0</div><div class="kpi-label">Avaliados (CE)</div></div></div></div>
+    <div class="col"><div class="kpi-card"><div class="kpi-bar" style="background:var(--success);"></div><div><div id="kpiAprovados" class="kpi-value" style="color:var(--success);">0</div><div class="kpi-label">Aprovados (CE)</div></div></div></div>
+    <div class="col"><div class="kpi-card"><div class="kpi-bar" style="background:var(--primary);"></div><div><div id="kpiEnviados" class="kpi-value" style="color:var(--primary);">0</div><div class="kpi-label">Enviados ao Cliente</div></div></div></div>
+</div>
+
+<div class="row g-2 mb-3">
+    <div class="col-md-6">
+        <div class="card-sara"><div class="card-header">Status em Andamento</div><div class="card-body"><div class="chart-container" style="height:300px;"><canvas id="donutChart"></canvas></div></div></div>
+    </div>
+    <div class="col-md-6">
+        <div class="card-sara"><div class="card-header">⏰️  Enviados por Prazo</div><div class="card-body"><div class="chart-container" style="height:300px;"><canvas id="prazoChart"></canvas></div></div></div>
+    </div>
+</div>
+
+<div class="card-sara mb-3">
+    <div class="card-header">📊 Retornos por Área Responsável</div>
+    <div class="card-body"><div class="chart-container" style="height:300px;"><canvas id="barChart"></canvas></div></div>
+</div>
+
+<div class="card-sara mb-3">
+    <div class="card-header">⏰ Lead Time Médio de Resposta por Mês (dias entre cadastro e envio)</div>
+    <div class="card-body"><div class="chart-container" style="height:280px;"><canvas id="leadChart"></canvas></div></div>
+</div>
+
+<div class="card-sara mb-3">
+    <div class="card-header">Cadastrados vs Enviados por Período</div>
+    <div class="card-body"><div class="chart-container" style="height:300px;"><canvas id="lineChart"></canvas></div></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let donutChart, prazoChart, barChart, leadChart, lineChart;
+
+function loadData() {
+    const mes = document.getElementById('filterMes').value;
+    const ano = document.getElementById('filterAno').value;
+    const setor = document.getElementById('filterSetor').value;
+
+    fetch(`{{ url_for('core.api_graficos') }}?mes=${mes}&ano=${ano}&setor=${setor}`)
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('kpiTotal').textContent = data.counters.total;
+            document.getElementById('kpiAvaliados').textContent = data.counters.avaliados;
+            document.getElementById('kpiAprovados').textContent = data.counters.aprovados;
+            document.getElementById('kpiEnviados').textContent = data.counters.enviados;
+
+            const coresStatus = {'Aguardando Avaliação CE':'#4472C4','Aguardando Execução':'#ED7D31','Aguardando Validação CE':'#9B59B6','Aguardando Envio Projetos':'#FFC000'};
+
+            if (donutChart) donutChart.destroy();
+            const dLabels = Object.keys(data.donut);
+            const dValues = Object.values(data.donut);
+            if (dLabels.length) {
+                donutChart = new Chart(document.getElementById('donutChart'), {
+                    type: 'doughnut',
+                    data: { labels: dLabels, datasets: [{ data: dValues, backgroundColor: dLabels.map(k => coresStatus[k] || '#5b8def'), borderWidth: 3, borderColor: corFundoGrafico(), hoverBorderColor: corBorda() }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { color: corTexto() } } } }
+                });
+            }
+
+            if (prazoChart) prazoChart.destroy();
+            const pData = data.prazo || {};
+            const pLabels = Object.keys(pData);
+            const pValues = Object.values(pData);
+            if (pLabels.length) {
+                prazoChart = new Chart(document.getElementById('prazoChart'), {
+                    type: 'doughnut',
+                    data: { labels: pLabels, datasets: [{ data: pValues, backgroundColor: ['#34d399', '#f87171'], borderWidth: 3, borderColor: corFundoGrafico(), hoverBorderColor: corBorda() }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { color: corTexto() } } } }
+                });
+            }
+
+            if (barChart) barChart.destroy();
+            const sLabels = Object.keys(data.setores);
+            const sValues = Object.values(data.setores);
+            if (sLabels.length) {
+                barChart = new Chart(document.getElementById('barChart'), {
+                    type: 'bar',
+                    data: { labels: sLabels, datasets: [{ label: 'Retornos', data: sValues, backgroundColor: '#5b8def', borderColor: corBorda(), borderWidth: 1.5, borderRadius: 4 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1, color: corTextoApoio() }, grid: { color: corBorda() } }, x: { ticks: { color: corTextoApoio(), font: { size: 10 } }, grid: { display: false } } } }
+                });
+            }
+
+            if (leadChart) leadChart.destroy();
+            const lLabels = data.lead_labels || [];
+            const lValues = data.lead || [];
+            if (lLabels.length) {
+                leadChart = new Chart(document.getElementById('leadChart'), {
+                    type: 'bar',
+                    data: { labels: lLabels, datasets: [{ label: 'Dias', data: lValues, backgroundColor: '#f59e6c', borderColor: corBorda(), borderWidth: 1.5, borderRadius: 4 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.y + ' dias' } } }, scales: { y: { beginAtZero: true, ticks: { color: corTextoApoio() }, grid: { color: corBorda() } }, x: { ticks: { color: corTextoApoio() }, grid: { display: false } } } }
+                });
+            }
+
+            if (lineChart) lineChart.destroy();
+            const lineLabels = data.line_labels || [];
+            const cadVals = data.cadastrados_mensal || [];
+            const envVals = data.enviados_mensal || [];
+            if (lineLabels.length) {
+                lineChart = new Chart(document.getElementById('lineChart'), {
+                    type: 'line',
+                    data: {
+                        labels: lineLabels,
+                        datasets: [
+                            { label: 'Cadastrados', data: cadVals, borderColor: '#5b8def', borderWidth: 2.5, backgroundColor: 'rgba(91,141,239,.12)', fill: true, tension: .3, pointRadius: 4, pointBorderColor: corFundoGrafico(), pointBorderWidth: 2 },
+                            { label: 'Enviados', data: envVals, borderColor: '#f59e6c', borderWidth: 2.5, backgroundColor: 'rgba(245,158,108,.12)', fill: true, tension: .3, pointRadius: 4, pointBorderColor: corFundoGrafico(), pointBorderWidth: 2 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { position: 'top', labels: { color: corTexto() } }, tooltip: { mode: 'index', intersect: false } },
+                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1, color: corTextoApoio() }, grid: { color: corBorda() } }, x: { ticks: { color: corTextoApoio() }, grid: { display: false } } },
+                        interaction: { mode: 'nearest', axis: 'x', intersect: false }
+                    }
+                });
+            }
+        });
+}
+
+document.getElementById('filterMes').addEventListener('change', loadData);
+document.getElementById('filterAno').addEventListener('change', loadData);
+document.getElementById('filterSetor').addEventListener('change', loadData);
+loadData();
+</script>
+{% endblock %}

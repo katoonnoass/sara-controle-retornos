@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Status de Usuários{% endblock %}
+{% block content %}
+<div class="card-sara">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Usuários Online</span>
+        <form method="POST" action="{{ url_for('admin.forcar_logoff_todos') }}" class="d-inline" onsubmit="return confirm('Encerrar todas as outras sessões?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-sm btn-danger">Forçar Logoff de Todos</button>
+        </form>
+    </div>
+    <div class="table-responsive-x">
+        <table class="table table-sara table-hover mb-0">
+            <thead><tr><th>Usuário</th><th>Status</th><th>Host</th><th>Último Login</th></tr></thead>
+            <tbody>
+                {% for s in sessoes %}
+                <tr>
+                    <td><strong>{{ s.usuario_login }}</strong></td>
+                    <td>
+                        {% if s.usuario_id == current_user.id %}
+                        <span class="badge-status s-concluido">Online</span> <small class="text-muted">(você)</small>
+                        {% else %}
+                        <span class="badge-status s-concluido">Online</span>
+                        {% endif %}
+                    </td>
+                    <td><small>{{ s.host }}</small></td>
+                    <td><small>{{ s.inicio[:16] }}</small></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="text-center text-muted py-4">Nenhum usuário online no momento.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card-sara mt-3">
+    <div class="card-header">Bloqueio de Login</div>
+    <div class="card-body">
+        <div class="row g-2">
+            <div class="col-md-6">
+                <form method="POST" action="{{ url_for('admin.bloquear_login') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label class="form-label-sm">Bloquear todos os usuários (exceto Admin/Diretor):</label>
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="motivo" class="form-control" placeholder="Motivo do bloqueio" value="Manutenção">
+                        <button type="submit" class="btn btn-sm btn-warning">Bloquear</button>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <form method="POST" action="{{ url_for('admin.desbloquear_login') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-success">Desbloquear Todos</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

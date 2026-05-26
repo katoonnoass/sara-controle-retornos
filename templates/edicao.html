@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %} Edição Manual de Tickets{% endblock %}
+{% block content %}
+<div class="card-sara">
+    <div class="card-header">Edição Manual de Tickets</div>
+    <div class="card-body">
+        <form method="GET" class="row g-2 mb-3">
+            <div class="col-auto">
+                <label class="form-label-sm">Ticket:</label>
+                <select name="ticket" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">Selecione...</option>
+                    {% for t in tickets %}<option value="{{ t }}" {{ 'selected' if t == ticket_sel }}>{{ t }}</option>{% endfor %}
+                </select>
+            </div>
+        </form>
+
+        {% if record %}
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="ticket" value="{{ ticket_sel }}">
+            {% set cols = [
+                ('id_retorno','ID Retorno'),('ticket_atendimento','Ticket'),('gp_recebimento_cliente','Data Receb. GP'),('nome_pmo','PMO'),
+                ('numero_proposta','Nº Proposta'),('nome_cliente','Cliente'),('nome_projeto','Projeto'),('codigo_documento','Cód. Documento'),
+                ('tipo_retorno','Tipo'),('justificativa_prioridade','Justificativa'),
+                ('gp_ce_envio_recebimento','Data GP>CE'),
+                ('avaliador_retorno','Avaliador'),('area_responsavel','Area'),
+                ('ce_ar_envio_recebimento','Data CE→AR'),('obs_avaliacao_ce','Obs. Avaliação'),
+                ('status_execucao','Status Exec.'),('responsavel_execucao','Resp. Exec.'),
+                ('ar_ce_envio_recebimento','Data AR→CE'),('comentario_execucao','Comentário Exec.'),
+                ('aprovador_retorno','Aprovador'),('status_ce','Status CE'),
+                ('ce_gp_envio_recebimento','Data CE→GP'),('comentario_validacao','Comentário Val.'),
+                ('gp_envio_cliente','Data GP→Cliente'),('obs_envio','Obs. Envio'),
+                ('status_retorno','Status Geral'),('prazo_execucao_customizado','Prazo Customizado'),
+            ] %}
+            {% set date_fields = ['gp_recebimento_cliente','gp_ce_envio_recebimento','ce_ar_envio_recebimento','ar_ce_envio_recebimento','ce_gp_envio_recebimento','gp_envio_cliente','prazo_execucao_customizado'] %}
+            <div class="row g-2">
+                {% for key, label in cols %}
+                <div class="col-md-4">
+                    <label class="form-label-sm">{{ label }}</label>
+                    {% if key in date_fields %}
+                    <input type="date" name="{{ key }}" class="form-control form-control-sm" value="{{ record.get(key, '')|date_input }}">
+                    {% else %}
+                    <input type="text" name="{{ key }}" class="form-control form-control-sm" value="{{ record.get(key, '') }}">
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            <hr>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary"> Salvar Alterações</button>
+                <a href="{{ url_for('core.edicao') }}" class="btn btn-outline-secondary"> Limpar</a>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

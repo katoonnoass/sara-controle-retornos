@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %} Produtividade{% endblock %}
+{% block content %}
+<div class="row g-2 mb-3" id="kpiRow">
+    {% for m in meses_dados %}
+    <div class="col-6 col-md-3 col-lg">
+        <div class="metric-card h-100" style="cursor:default;">
+            <div class="mc-bar" style="background:var(--primary);"></div>
+            <div class="mc-body">
+                <div class="mc-value" style="color:var(--primary);">{{ m.total }}</div>
+                <div class="mc-label">{{ m.mes }}</div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="card-sara">
+    <div class="card-header">Produtividade por Usuário</div>
+    <div class="table-responsive-x">
+        <table class="table table-sara table-hover mb-0">
+            <thead><tr><th>Usuário</th><th>Execuções</th><th>Avaliações (CE)</th><th>Validações (CE)</th><th>Total</th></tr></thead>
+            <tbody>
+                {% for u in prod_data %}
+                <tr>
+                    <td><strong>{{ u.nome }}</strong></td>
+                    <td>{{ u.exec }}</td>
+                    <td>{{ u.aval }}</td>
+                    <td>{{ u.valid }}</td>
+                    <td><strong>{{ u.exec + u.aval + u.valid }}</strong></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="text-center text-muted py-4">Nenhum dado disponível.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

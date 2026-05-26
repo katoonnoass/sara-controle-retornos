@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Auditoria{% endblock %}
+{% block content %}
+<div class="card-sara">
+    <div class="card-header">Auditoria de Ações</div>
+    <div class="card-body py-2 px-3">
+        <form method="GET" class="row g-1 align-items-end">
+            <div class="col-auto">
+                <label class="form-label-sm">Usuário:</label>
+                <input type="text" name="usuario" class="form-control form-control-sm" value="{{ usuario_f }}" style="min-width:120px;" placeholder="Filtrar...">
+            </div>
+            <div class="col-auto">
+                <label class="form-label-sm">Ação:</label>
+                <select name="acao" class="form-select form-select-sm" style="min-width:150px;">
+                    <option value="">Todas</option>
+                    {% for a in acoes %}<option value="{{ a }}" {{ 'selected' if a == acao_f }}>{{ a }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label-sm">Ticket:</label>
+                <input type="text" name="ticket" class="form-control form-control-sm" value="{{ ticket_f }}" style="min-width:120px;" placeholder="Filtrar...">
+            </div>
+            <div class="col-auto">
+                <label class="form-label-sm">Data início:</label>
+                <input type="date" name="data_ini" class="form-control form-control-sm" value="{{ data_ini }}" style="min-width:140px;">
+            </div>
+            <div class="col-auto">
+                <label class="form-label-sm">Data fim:</label>
+                <input type="date" name="data_fim" class="form-control form-control-sm" value="{{ data_fim }}" style="min-width:140px;">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-sm btn-outline-secondary">Filtrar</button>
+                <a href="{{ url_for('admin.auditoria') }}" class="btn btn-sm btn-outline-secondary">Limpar</a>
+            </div>
+        </form>
+        <small class="text-muted mt-1 d-block">{{ total }} registro(s) encontrado(s) &mdash; página {{ page }} de {{ total_pages }}</small>
+    </div>
+</div>
+
+<div class="card-sara">
+    <div class="card-header">Registros de Auditoria</div>
+    <div class="table-responsive-x">
+        <table class="table table-sara table-hover mb-0" style="font-size:12px;">
+            <thead><tr>
+                <th style="width:130px;">Data/Hora</th>
+                <th style="width:120px;">Usuário</th>
+                <th style="width:140px;">Ação</th>
+                <th style="width:130px;">Ticket</th>
+                <th>Status Anterior</th>
+                <th>Status Novo</th>
+                <th>Detalhes</th>
+                <th style="width:110px;">IP</th>
+            </tr></thead>
+            <tbody>
+                {% for r in registros %}
+                <tr>
+                    <td><small>{{ r.created_at.strftime('%d/%m/%Y %H:%M') }}</small></td>
+                    <td>{{ r.usuario_login }}</td>
+                    <td><span class="badge-status" style="background:rgba(68,114,196,.12);color:#93c5fd;">{{ r.acao }}</span></td>
+                    <td><small>{{ r.ticket_retorno or '-' }}</small></td>
+                    <td><small>{{ r.status_anterior or '-' }}</small></td>
+                    <td><small>{{ r.status_novo or '-' }}</small></td>
+                    <td><small>{{ (r.detalhes or '')[:80] }}{{ '...' if (r.detalhes or '')|length > 80 }}</small></td>
+                    <td><small>{{ r.ip }}</small></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" class="text-center text-muted py-4">Nenhum registro de auditoria encontrado.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if total_pages > 1 %}
+    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-top" style="border-color:var(--border)!important;">
+        <small class="text-muted">Página {{ page }} de {{ total_pages }}</small>
+        <nav><ul class="pagination pagination-sm mb-0" style="gap:2px;">
+            <li class="page-item {{ 'disabled' if page <= 1 }}">
+                <a class="page-link" href="{{ url_for('admin.auditoria', page=1, usuario=usuario_f, acao=acao_f, ticket=ticket_f, data_ini=data_ini, data_fim=data_fim) }}" style="background:var(--bg-card);border-color:var(--border);color:var(--text);">&laquo;</a>
+            </li>
+            <li class="page-item {{ 'disabled' if page <= 1 }}">
+                <a class="page-link" href="{{ url_for('admin.auditoria', page=page-1, usuario=usuario_f, acao=acao_f, ticket=ticket_f, data_ini=data_ini, data_fim=data_fim) }}" style="background:var(--bg-card);border-color:var(--border);color:var(--text);">&lsaquo;</a>
+            </li>
+            {% for p in range([1, page-2]|max, [total_pages, page+2]|min + 1) %}
+            <li class="page-item {{ 'active' if p == page }}">
+                <a class="page-link" href="{{ url_for('admin.auditoria', page=p, usuario=usuario_f, acao=acao_f, ticket=ticket_f, data_ini=data_ini, data_fim=data_fim) }}" style="{{ 'background:var(--primary);border-color:var(--primary);color:#fff;' if p == page else 'background:var(--bg-card);border-color:var(--border);color:var(--text);' }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+            <li class="page-item {{ 'disabled' if page >= total_pages }}">
+                <a class="page-link" href="{{ url_for('admin.auditoria', page=page+1, usuario=usuario_f, acao=acao_f, ticket=ticket_f, data_ini=data_ini, data_fim=data_fim) }}" style="background:var(--bg-card);border-color:var(--border);color:var(--text);">&rsaquo;</a>
+            </li>
+            <li class="page-item {{ 'disabled' if page >= total_pages }}">
+                <a class="page-link" href="{{ url_for('admin.auditoria', page=total_pages, usuario=usuario_f, acao=acao_f, ticket=ticket_f, data_ini=data_ini, data_fim=data_fim) }}" style="background:var(--bg-card);border-color:var(--border);color:var(--text);">&raquo;</a>
+            </li>
+        </ul></nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

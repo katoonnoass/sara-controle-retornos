@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Etapa 4 - Validação (CE){% endblock %}
+{% block content %}
+<div class="card-sara">
+    <div class="card-header">Etapa 4 - Validação (Coordenação de Estudos)</div>
+    <div class="card-body">
+        <div class="alert alert-info py-2 px-3 small" style="background:rgba(155,89,182,.12);color:#9B59B6;border:none;">Valide a execução. Se aprovado, segue para Projetos. Se reprovado, volta para Execução. A data CE→GP será registrada automaticamente.</div>
+
+        <form method="GET" class="row g-2 mb-3 align-items-end">
+            <div class="col-auto">
+                <label class="form-label-sm">Ticket:</label>
+                <select name="ticket" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">Selecione...</option>
+                    {% for t in tickets %}<option value="{{ t }}" {{ 'selected' if t == ticket_sel }}>{{ t }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <a href="{{ url_for('etapas.validar') }}" class="btn btn-sm btn-outline-secondary">↺ Atualizar</a>
+            </div>
+        </form>
+
+        {% if not tickets %}
+        <div class="alert alert-warning py-2 px-3 small" style="background:rgba(251,191,36,.08);color:var(--warning);border:none;">Nenhum ticket aguarda Validação CE.</div>
+        {% endif %}
+
+        {% if record %}
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="ticket" value="{{ ticket_sel }}">
+            <div class="row g-2 mb-3">
+                <div class="col-auto"><label class="form-label-sm">Ticket</label><input class="form-control form-control-sm ro-field" value="{{ record.ticket_atendimento }}" readonly></div>
+                <div class="col-auto"><label class="form-label-sm">Nº Proposta</label><input class="form-control form-control-sm ro-field" value="{{ record.numero_proposta }}" readonly></div>
+                <div class="col-auto"><label class="form-label-sm">Cód. Documento</label><input class="form-control form-control-sm ro-field" value="{{ record.codigo_documento }}" readonly></div>
+                <div class="col"><label class="form-label-sm">Projeto</label><input class="form-control form-control-sm ro-field" value="{{ record.nome_projeto }}" readonly></div>
+            </div>
+            <hr>
+            <div class="row g-2 mb-2">
+                <div class="col-auto"><label class="form-label-sm">Área Executora</label><input class="form-control form-control-sm ro-field" value="{{ record.area_responsavel }}" readonly></div>
+                <div class="col-auto"><label class="form-label-sm">Responsável Exec.</label><input class="form-control form-control-sm ro-field" value="{{ record.responsavel_execucao }}" readonly></div>
+                <div class="col-auto"><label class="form-label-sm">Status Execução</label><input class="form-control form-control-sm ro-field" value="{{ record.status_execucao }}" readonly></div>
+            </div>
+            <div class="mb-2"><label class="form-label-sm">Comentário da Execução (AR→CE)</label><textarea class="form-control form-control-sm ro-field" rows="2" readonly>{{ record.comentario_execucao }}</textarea></div>
+            <hr>
+            <div class="row g-2 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label-sm">Aprovador CE *</label>
+                    <select name="aprovador_retorno" class="form-select form-select-sm" required>
+                        <option value="">Selecione...</option>
+                        {% for p in pessoas_ce %}<option value="{{ p }}" {{ 'selected' if p == record.aprovador_retorno }}>{{ p }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label-sm">Status Validação *</label>
+                    <select name="status_ce" class="form-select form-select-sm">
+                        {% for s in ['Pendente','Aprovado','Reprovado'] %}<option value="{{ s }}" {{ 'selected' if s == record.status_ce }}>{{ s }}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="mb-2"><label class="form-label-sm">Histórico de Comentários (somente leitura)</label><textarea class="form-control form-control-sm ro-field" rows="2" readonly>{{ record.comentario_validacao if record.comentario_validacao not in ('-','') else '' }}</textarea></div>
+            <div class="mb-3">
+                <label class="form-label-sm">Acréscimo ao Comentário</label>
+                <textarea name="comentario_validacao" class="form-control form-control-sm" rows="2"></textarea>
+            </div>
+            <hr>
+            <div class="d-flex gap-2 justify-content-end">
+                <button type="submit" class="btn btn-sm btn-success">💾 Salvar</button>
+                <a href="{{ url_for('core.lista') }}" class="btn btn-sm btn-outline-secondary">✕ Cancelar</a>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

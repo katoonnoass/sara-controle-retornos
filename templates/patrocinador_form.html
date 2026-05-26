@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Novo' if not edit else 'Editar' }} Patrocinador{% endblock %}
+{% block content %}
+<div class="card-sara">
+    <div class="card-header">{{ ' Novo Patrocinador' if not edit else ' Editar - ' + record.nome_patrocinador }}</div>
+    <div class="card-body">
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% if record %}
+            <div class="mb-3"><label class="form-label-sm">ID Patrocinador:</label><div><strong style="color:#4472C4;">{{ record.id_patrocinador }}</strong></div></div>
+            {% endif %}
+            <div class="mb-3">
+                <label class="form-label-sm">Nome do Patrocinador / Cliente *</label>
+                <input type="text" name="nome_patrocinador" class="form-control form-control-sm" value="{{ record.nome_patrocinador if record else '' }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label-sm">Empresa / Organiza??o</label>
+                <input type="text" name="empresa" class="form-control form-control-sm" value="{{ record.empresa if record else '' }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label-sm">Observa??es</label>
+                <input type="text" name="observacoes" class="form-control form-control-sm" value="{{ record.observacoes if record else '' }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label-sm">Ativo:</label>
+                <div class="d-flex gap-3 mt-1">
+                    <div class="form-check"><input class="form-check-input" type="radio" name="ativo" value="Sim" id="patAtvSim" {{ 'checked' if not record or record.ativo == 'Sim' }}><label class="form-check-label small" for="patAtvSim">Sim</label></div>
+                    <div class="form-check"><input class="form-check-input" type="radio" name="ativo" value="N?o" id="patAtvNao" {{ 'checked' if record and record.ativo == 'N?o' }}><label class="form-check-label small" for="patAtvNao">N?o</label></div>
+                </div>
+            </div>
+            <hr>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary"> Salvar</button>
+                <a href="{{ url_for('admin.patrocinadores') }}" class="btn btn-outline-secondary"> Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
