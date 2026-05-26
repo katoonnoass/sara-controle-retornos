@@ -56,17 +56,17 @@ Para especificar retenção diferente (ex.: 60 dias):
    - Programa: `powershell.exe`
    - Argumentos:
      ```
-     -ExecutionPolicy Bypass -File "C:\Users\joao.silva\Documents\SARA\scripts\backup_postgres.ps1"
-     ```
-   - Iniciar em: `C:\Users\joao.silva\Documents\SARA`
+      -ExecutionPolicy Bypass -File ".\scripts\backup_postgres.ps1"
+      ```
+    - Iniciar em: `CAMINHO_DO_PROJETO`
 6. Concluir
 
 ### Opção: Executar como usuário do banco
 
-Crie um arquivo `C:\Users\joao.silva\.pgpass` com:
+Crie um arquivo `.pgpass` com:
 
 ```
-localhost:5433:*:postgres:Ephar@2026PG
+localhost:5432:*:postgres:SUA_SENHA
 ```
 
 E ajuste o script para não usar `PGPASSWORD`.

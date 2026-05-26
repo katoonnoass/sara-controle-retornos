@@ -8,7 +8,7 @@
 
 ## Etapa 1 — Backup / Quarentena (antes de qualquer exclusão)
 
-1. Criar uma pasta `C:\Users\joao.silva\Documents\_QUARENTENA`
+1. Criar uma pasta `_QUARENTENA` na raiz do projeto
 2. Mover itens candidatos para lá (em vez de excluir diretamente):
    - `New project` → `_QUARENTENA\New project`
    - `Codex` → `_QUARENTENA\Codex`
@@ -24,12 +24,12 @@ Estes itens podem ser limpos sem risco, pois são regeneráveis:
 
 ```powershell
 # Limpar __pycache__ (regenerado automaticamente)
-Get-ChildItem -Path "C:\Users\joao.silva\Documents\SARA" `
+Get-ChildItem -Path "CAMINHO_DO_PROJETO" `
   -Directory -Recurse -Filter "__pycache__" | Remove-Item -Recurse -Force
 
 # Limpar builds do Agent (regenerado com dotnet build)
-Remove-Item -Path "C:\Users\joao.silva\Documents\SARA\SaraServerAgent\bin" -Recurse -Force
-Remove-Item -Path "C:\Users\joao.silva\Documents\SARA\SaraServerAgent\obj" -Recurse -Force
+Remove-Item -Path "CAMINHO_DO_PROJETO\SaraServerAgent\bin" -Recurse -Force
+Remove-Item -Path "CAMINHO_DO_PROJETO\SaraServerAgent\obj" -Recurse -Force
 ```
 
 Economia estimada: ~200 MB (apenas build artifacts).
@@ -41,7 +41,7 @@ Economia estimada: ~200 MB (apenas build artifacts).
 Após a limpeza dos artefatos, executar:
 
 ```cmd
-cd C:\Users\joao.silva\Documents\SARA
+cd CAMINHO_DO_PROJETO
 python run.py
 ```
 
@@ -68,7 +68,7 @@ Após 7 dias sem incidentes:
 
 ```powershell
 # Excluir quarentena (somente com confirmacao manual)
-Remove-Item -Path "C:\Users\joao.silva\Documents\_QUARENTENA" -Recurse -Force
+Remove-Item -Path "CAMINHO_DA_QUARENTENA" -Recurse -Force
 ```
 
 ---

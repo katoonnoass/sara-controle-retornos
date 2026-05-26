@@ -13,7 +13,7 @@ class Config:
         DEBUG = False
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         "DATABASE_URL",
-        "postgresql+psycopg://postgres:Ephar%402026PG@localhost:5433/sara"
+        "postgresql+psycopg://postgres:senha@localhost:5432/sara"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SESSION_COOKIE_NAME = "sara_session"

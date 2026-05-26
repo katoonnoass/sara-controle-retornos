@@ -1,7 +1,7 @@
 # Relatório de Inventário — Documentos / SARA
 
 **Data**: 26/05/2026  
-**Objetivo**: Identificar pastas e arquivos em C:\Users\joao.silva\Documents, classificar riscos e preparar limpeza segura.  
+**Objetivo**: Identificar pastas e arquivos em `Documents`, classificar riscos e preparar limpeza segura.  
 **Nada foi apagado ou movido.**
 
 ---
@@ -12,7 +12,7 @@
 |---|---|
 | Pastas encontradas em Documents | 9 |
 | Arquivos soltos em Documents | 3 (Default.rdp, desktop.ini, Project CRM.zip) |
-| Pasta oficial do SARA | `C:\Users\joao.silva\Documents\SARA` |
+| Pasta oficial do SARA | `Documents\SARA` |
 | Pastas aparentemente em uso | 4 (SARA, ServiceDesk, ServiceDeskAgent, painel de chamados) |
 | Pastas candidatas a limpeza | 4 (Codex, New project, AD Auditory, WindowsPowerShell) |
 | Total ocupado em Documents | ~3 GB |
@@ -37,7 +37,7 @@
 
 ## 3. Pasta Oficial do SARA — Análise Detalhada
 
-**Caminho**: `C:\Users\joao.silva\Documents\SARA`
+**Caminho**: `Documents\SARA`
 
 ### Arquivos essenciais (presentes)
 
@@ -95,11 +95,11 @@
 
 ## 5. Pastas que NÃO devem ser apagadas
 
-- `C:\Users\joao.silva\Documents\SARA` — projeto principal
-- `C:\Users\joao.silva\Documents\ServiceDesk` — outro sistema
-- `C:\Users\joao.silva\Documents\ServiceDeskAgent` — Agent do ServiceDesk
-- `C:\Users\joao.silva\Documents\painel de chamados` — outro sistema
-- `C:\Users\joao.silva\Documents\WindowsPowerShell` — padrão do sistema
+- `Documents\SARA` — projeto principal
+- `Documents\ServiceDesk` — outro sistema
+- `Documents\ServiceDeskAgent` — Agent do ServiceDesk
+- `Documents\painel de chamados` — outro sistema
+- `Documents\WindowsPowerShell` — padrão do sistema
 
 ---
 

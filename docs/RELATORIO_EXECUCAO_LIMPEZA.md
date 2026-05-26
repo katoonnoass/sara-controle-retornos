@@ -9,9 +9,9 @@
 
 | Item | Origem | Destino | Tamanho |
 |---|---|---|---|
-| `New project` | `C:\Users\joao.silva\Documents\New project` | `_QUARENTENA\New project` | 1,4 MB |
-| `Codex` | `C:\Users\joao.silva\Documents\Codex` | `_QUARENTENA\Codex` | 0 MB |
-| `Project CRM.zip` | `C:\Users\joao.silva\Documents\Project CRM.zip` | `_QUARENTENA\Project CRM.zip` | ~285 MB |
+| `New project` | `Documents\New project` | `_QUARENTENA\New project` | 1,4 MB |
+| `Codex` | `Documents\Codex` | `_QUARENTENA\Codex` | 0 MB |
+| `Project CRM.zip` | `Documents\Project CRM.zip` | `_QUARENTENA\Project CRM.zip` | ~285 MB |
 
 **Total movido para quarentena**: ~286 MB.
 
@@ -83,11 +83,11 @@ Ambos foram recriados com sucesso e o build do Agent está operacional.
 
 ## 7. Quarentena
 
-A pasta `C:\Users\joao.silva\Documents\_QUARENTENA` contém os itens movidos e **deve permanecer por 7 dias** (até 02/06/2026) antes de qualquer exclusão definitiva, conforme plano aprovado.
+A pasta `_QUARENTENA` contém os itens movidos e **deve permanecer por 7 dias** (até 02/06/2026) antes de qualquer exclusão definitiva, conforme plano aprovado.
 
 Após o prazo, a exclusão pode ser feita com:
 ```powershell
-Remove-Item -Path "C:\Users\joao.silva\Documents\_QUARENTENA" -Recurse -Force
+Remove-Item -Path "CAMINHO_DA_QUARENTENA" -Recurse -Force
 ```
 
 **Recomendação**: antes de excluir, verificar se nenhum dos itens em quarentena é necessário.

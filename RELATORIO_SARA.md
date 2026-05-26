@@ -37,7 +37,7 @@
 ### Árvore principal (projeto web, sem binários)
 
 ```
-C:\Users\joao.silva\Documents\SARA\
+CAMINHO_DO_PROJETO\
 ├── app.py                          # Entry point Flask (create_app)
 ├── config.py                       # Config: SECRET_KEY, DB URL, cores, labels
 ├── models.py                       # SQLAlchemy models (Usuario, Retorno, Patrocinador, Sessao)

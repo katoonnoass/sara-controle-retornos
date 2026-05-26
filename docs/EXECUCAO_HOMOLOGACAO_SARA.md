@@ -7,7 +7,7 @@
 | **Data** | ___/___/______ |
 | **Horário** | __:__ às __:__ |
 | **Ambiente** | Homologação |
-| **URL do sistema** | http://192.168.1.235:5000 |
+| **URL do sistema** | http://localhost:5000 |
 | **Versão** | 5.4.0-WEB |
 | **Servidor** | Waitress (threads=8) |
 | **Banco** | PostgreSQL 16 — localhost:5433/sara |

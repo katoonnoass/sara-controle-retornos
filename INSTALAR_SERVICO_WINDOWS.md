@@ -30,9 +30,9 @@ Uma janela vai abrir. Preencha:
 
 | Campo | Valor |
 |-------|-------|
-| **Application Path** | `C:\Python314\python.exe` _(caminho do seu Python)_ |
-| **Startup Directory** | `C:\Projetos\SARA_v5_corrigido_v9\SARA_v5_output\sara_web` |
-| **Arguments** | `-m waitress --host=0.0.0.0 --port=5000 --threads=8 app:create_app()` |
+| **Application Path** | `CAMINHO_DO_SEU_PYTHON\python.exe` _(ex: C:\Python312\python.exe)_ |
+| **Startup Directory** | `CAMINHO_DO_PROJETO` _(ex: C:\SARA)_ |
+| **Arguments** | `-m waitress --host=0.0.0.0 --port=5000 --threads=8 "app:create_app()"` |
 
 Na aba **Details**:
 - Display Name: `SARA - Sistema de Retornos`
@@ -80,9 +80,9 @@ nssm remove SARA      # Remover serviço (confirmar)
 4. **Gatilhos** → Novo:
    - Iniciar tarefa: **"Ao iniciar"**
 5. **Ações** → Novo:
-   - Programa: `C:\Python314\python.exe`
-   - Argumentos: `-m waitress --host=0.0.0.0 --port=5000 --threads=8 app:create_app()`
-   - Iniciar em: `C:\Projetos\SARA_v5_corrigido_v9\SARA_v5_output\sara_web`
+   - Programa: `CAMINHO_DO_SEU_PYTHON\python.exe`
+   - Argumentos: `-m waitress --host=0.0.0.0 --port=5000 --threads=8 "app:create_app()"`
+   - Iniciar em: `CAMINHO_DO_PROJETO`
 6. OK → OK
 
 Para testar:

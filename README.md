@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/status-em%20produ%C3%A7%C3%A3o-success?style=flat-square">
+  <img src="https://img.shields.io/badge/status-em%20homologa%C3%A7%C3%A3o-yellow?style=flat-square">
   <img src="https://img.shields.io/badge/vers%C3%A3o-5.4.0--WEB-blue?style=flat-square">
   <img src="https://img.shields.io/badge/python-3.11%2B-blue?style=flat-square&logo=python">
   <img src="https://img.shields.io/badge/Flask-3.0-black?style=flat-square&logo=flask">
@@ -25,7 +25,7 @@
 
 O **SARA** é um sistema web completo para **controle e acompanhamento de retornos** de documentos técnicos, seguindo o fluxo de 5 etapas (E1 → E5). Desenvolvido para a **EPHAR Indústria Farmacêutica**, o sistema automatiza todo o ciclo de vida dos retornos, desde a solicitação até a conclusão.
 
-> ✅ Em produção · 🐍 Python/Flask · 🐘 PostgreSQL · 🖥️ Agente Windows (.NET 8)
+> ✅ Em homologação · 🐍 Python/Flask · 🐘 PostgreSQL · 🖥️ Agente Windows (.NET 8)
 
 ---
 
@@ -119,8 +119,8 @@ cd sara-controle-retornos
 
 ```bash
 python -m venv venv
-.\venv\Scripts\Activate    # Windows
-source venv/bin/activate   # Linux/macOS
+.\venv\Scripts\Activate.ps1    # Windows
+source venv/bin/activate       # Linux/macOS
 pip install -r requirements.txt
 ```
 
@@ -136,10 +136,18 @@ Edite o `.env` com suas configurações:
 
 ```ini
 APP_ENV=development
-DATABASE_URL=postgresql+psycopg://postgres:SUA_SENHA@localhost:5433/sara
-SECRET_KEY=python -c "import secrets; print(secrets.token_urlsafe(64))"
+DATABASE_URL=postgresql+psycopg://postgres:SUA_SENHA@localhost:5432/sara
 FLASK_DEBUG=true
 ```
+
+> 💡 Gere uma `SECRET_KEY` segura com:
+> ```bash
+> python -c "import secrets; print(secrets.token_urlsafe(64))"
+> ```
+> Copie o valor gerado e adicione ao `.env`:
+> ```ini
+> SECRET_KEY=cole_aqui_a_chave_gerada
+> ```
 
 ### 4. Execute
 
@@ -149,7 +157,7 @@ python app.py
 
 Acesse [`http://localhost:5000`](http://localhost:5000)
 
-> 👤 Login padrão: `admin` · senha: `admin` _(altere em produção!)_
+> ⚠️ Ao executar pela primeira vez, o sistema cria automaticamente um usuário administrador padrão. **Altere a senha imediatamente após o primeiro acesso.**
 
 ---
 

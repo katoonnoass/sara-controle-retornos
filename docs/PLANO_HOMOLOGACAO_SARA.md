@@ -144,7 +144,7 @@ Cada item deve ser preenchido com:
 
 | Item | Valor |
 |---|---|
-| **URL do sistema** | http://192.168.1.235:5000 |
+| **URL do sistema** | http://localhost:5000 |
 | **Banco de dados** | PostgreSQL 16 — `sara` (localhost:5433) |
 | **Versão do sistema** | 5.4.0-WEB |
 | **Servidor** | Waitress (threads=8) |

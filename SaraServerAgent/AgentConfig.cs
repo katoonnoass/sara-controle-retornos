@@ -5,7 +5,7 @@ namespace SaraServerAgent
     public class AgentConfig
     {
         [JsonPropertyName("ProjectPath")]
-        public string ProjectPath { get; set; } = @"C:\Users\joao.silva\Documents\SARA";
+        public string ProjectPath { get; set; } = ".";
 
         [JsonPropertyName("StartMode")]
         public string StartMode { get; set; } = "powershell";

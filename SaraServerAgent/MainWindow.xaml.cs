@@ -44,7 +44,7 @@ namespace SaraServerAgent
                 {
                     FileName = "python",
                     Arguments = "run.py",
-                    WorkingDirectory = @"C:\Users\joao.silva\Documents\SARA",
+                    WorkingDirectory = Environment.CurrentDirectory,
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
